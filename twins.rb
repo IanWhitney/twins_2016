@@ -3,11 +3,40 @@ require "bundler/setup"
 require "thor"
 require "csv"
 
+class NullObject < BasicObject
+  def method_missing(*)
+    # NOOP
+  end
+
+  def respond_to?(*)
+    true
+  end
+
+  def inspect
+    "null"
+  end
+
+  klass = self
+  define_method(:class) { klass }
+end
+
+class NullAttendee < NullObject
+  def to_s
+    ""
+  end
+end
+
+class NullGame < NullObject
+  def to_s
+    "Unknown Game"
+  end
+end
+
 class Attendee
   attr_accessor :id, :name
 
   def self.all
-    CSV.readlines("data/attendees.csv", headers: true).map do |r|
+    AttendeeRepo.all.map do |r|
       new(id: r["id"], name: r["name"])
     end
   end
@@ -23,20 +52,6 @@ class Attendee
 
   def to_s
     "#{name} (#{id})"
-  end
-end
-
-class NullAttendee
-  def id
-    "<null>"
-  end
-
-  def name
-    "<null>"
-  end
-
-  def to_s
-    "Not Picked"
   end
 end
 
@@ -79,32 +94,15 @@ class Game
   end
 end
 
-class NullGame
-  def id
-    "<null>"
-  end
-
-  def date
-    "<null>"
-  end
-
-  def opponent
-    "<null>"
-  end
-
-  def attendee
-    "<null>"
-  end
-
-
-  def to_s
-    "Unknown Game"
+class CSVRepo
+  def self.all
+    CSV.readlines(source, headers: true)
   end
 end
 
-class GameRepo
-  def self.all
-    CSV.readlines("data/games.csv", headers: true)
+class GameRepo < CSVRepo
+  def self.source
+    "data/games.csv"
   end
 
   def self.add_attendee(game:, attendee:)
@@ -118,6 +116,12 @@ class GameRepo
       end
     end
     `cp data/ngames.csv data/games.csv`
+  end
+end
+
+class AttendeeRepo < CSVRepo
+  def self.source
+    "data/attendees.csv"
   end
 end
 
