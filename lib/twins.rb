@@ -103,7 +103,7 @@ class GameRepo < CSVRepo
   end
 
   def self.add_attendee(game:, attendee:)
-    CSV.open("data/ngames.csv", 'w', headers: true) do |csv|
+    CSV.open("tmp.csv", 'w', headers: true) do |csv|
       csv.puts ["id","opponent","date","attendee_id"]
       all.each do |g|
         if g["id"].to_i == game.id.to_i
@@ -112,7 +112,7 @@ class GameRepo < CSVRepo
         csv.puts g
       end
     end
-    `cp data/ngames.csv data/games.csv`
+    `cp tmp.csv #{source} && rm tmp.csv`
   end
 end
 
